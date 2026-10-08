@@ -205,7 +205,7 @@
   /* ---------- AYARLAR ---------- */
   const WA_NUMBER = '905313724001';
   const MIN_ORDER = 250;          // Minimum sepet tutarı (indirimli toplam üzerinden)
-  const DISCOUNT = 0.20;          // Tüm ürünlere %20 indirim
+  const DISCOUNT = 0.30;          // Tüm ürünlere %30 indirim
   const STORE_NAME = 'Doktor Fast Food';
   const LS_CUSTOMER = 'dff_customer_v1';
   const IMG_BASE = 'https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/484029/';
@@ -311,7 +311,8 @@
   const $ = (s) => document.querySelector(s);
   const fmt = (n) => n.toLocaleString('tr-TR') + ' TL';
   const byId = (id) => PRODUCTS.find((p) => p.id === id);
-  const sale = (p) => Math.round(p.price * (1 - DISCOUNT));
+  const sale = (p) => Math.round(p.price * (1 - DISCOUNT) / 5) * 5;   // 5 TL'ye yuvarlanmış düz fiyat
+  const pctOf = (p) => Math.round((1 - sale(p) / p.price) * 100);
   const pct = Math.round(DISCOUNT * 100);
   const catIcon = (id) => (CATEGORIES.find((c) => c.id === id) || {}).icon || 'fa-utensils';
   const lineKey = (id, removed) => id + '|' + removed.join(',');
@@ -358,7 +359,7 @@
   function cardHTML(p) {
     const fallback = `<div class="absolute inset-0 bg-gradient-to-br from-amber-300 via-amber-400 to-brand-500 flex items-center justify-center"><i class="fa-solid ${catIcon(p.cat)} text-3xl text-white/90"></i></div>`;
     const img = p.img ? `<img src="${IMG_BASE + p.img}" alt="${p.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover">` : '';
-    const badge = `<span class="absolute top-1 left-1 bg-amber-400 text-brand-800 text-[10px] font-extrabold rounded-md px-1.5 py-0.5">%${pct}</span>`;
+    const badge = `<span class="absolute top-1 left-1 bg-amber-400 text-brand-800 text-[10px] font-extrabold rounded-md px-1.5 py-0.5">%${pctOf(p)}</span>`;
     const custom = p.opt.length
       ? `<button data-act="inc" data-id="${p.id}" class="text-[11px] font-semibold text-brand-600 mt-1 text-left self-start"><i class="fa-solid fa-sliders mr-1"></i>Malzeme çıkarabilirsiniz</button>` : '';
     return `<article class="bg-white rounded-2xl border border-stone-200 shadow-sm p-3 flex gap-3">
@@ -481,7 +482,7 @@
     }).join('');
     const { total, list, saved } = totals();
     $('#sumList').textContent = fmt(list);
-    $('#sumDiscLabel').textContent = `%${pct} indirim`;
+    $('#sumDiscLabel').textContent = 'İndirim';
     $('#sumDisc').textContent = '-' + fmt(saved);
     $('#sumTotal').textContent = fmt(total);
     const ok = total >= MIN_ORDER;
@@ -549,7 +550,7 @@
       ...orderLines,
       '',
       `Liste fiyatı: ${fmt(list)}`,
-      `%${pct} indirim: -${fmt(saved)}`,
+      `İndirim: -${fmt(saved)}`,
       `*TOPLAM: ${fmt(total)}*`,
       `*Ödeme:* ${pay}`,
       '',
@@ -614,7 +615,7 @@
   $('#sendWa').addEventListener('click', sendOrder);
 
   $('#waTop').href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Merhaba, sipariş hakkında bilgi almak istiyorum.')}`;
-  $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde %${pct} indirim · Min. sipariş ${MIN_ORDER} TL`;
+  $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde yaklaşık %${pct} indirim · Min. sipariş ${MIN_ORDER} TL`;
 
   function fixNav() { $('#catNav').style.top = $('#topHeader').offsetHeight + 'px'; }
   window.addEventListener('resize', fixNav);
