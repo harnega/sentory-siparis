@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hızlı Sipariş Hatı</title>
+    <!-- Tailwind CSS (Tasarım için) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans pb-24">
+
+    <!-- Üst Header -->
+    <header class="bg-red-600 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold">SENTORY PIZZA & BURGER</h1>
+                <p class="text-xs text-red-200">🚀 Komisyonsuz İndirimli Sipariş Hattı</p>
+            </div>
+            <a href="https://wa.me/905000000000" target="_blank" class="bg-green-500 text-white p-2 rounded-full text-sm font-bold flex items-center gap-1 shadow">
+                <i class="fab font-bold fa-whatsapp text-lg"></i> Destek
+            </a>
+        </div>
+    </header>
+
+    <!-- Kategori Tabları (Kaydırılabilir) -->
+    <nav class="bg-white border-b sticky top-[60px] z-40 shadow-sm">
+        <div class="max-w-md mx-auto flex overflow-x-auto no-scrollbar py-2 px-3 gap-2 text-sm font-semibold">
+            <button onclick="filterCategory('all')" class="bg-red-600 text-white px-4 py-1.5 rounded-full whitespace-nowrap">Tümü</button>
+            <button onclick="filterCategory('pizza')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">Pizzalar</button>
+            <button onclick="filterCategory('burger')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">Burgerler</button>
+            <button onclick="filterCategory('icecek')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">İçecekler</button>
+        </div>
+    </nav>
+
+    <!-- Ürün Listesi -->
+    <main class="max-w-md mx-auto p-4 space-y-4" id="product-list">
+        <!-- JavaScript Ürünleri Buraya Dizecek -->
+    </main>
+
+    <!-- Alt Sepet Barları -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 shadow-2xl hidden z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center mb-2">
+            <div>
+                <p class="text-xs text-gray-500">Toplam Tutarlar</p>
+                <p class="text-lg font-bold text-gray-800" id="cart-total">0 TL</p>
+            </div>
+            <button onclick="toggleModal(true)" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md">
+                Siparişi Tamamla ➔
+            </button>
+        </div>
+        <p id="min-amount-warn" class="text-xs text-center text-red-500 font-semibold hidden">Min. Sipariş Tutarı: 150 TL</p>
+    </div>
+
+    <!-- Müşteri Adres & Ödeme Modalı (Penceresi) -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center hidden">
+        <div class="bg-white w-full max-w-md rounded-t-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold">Teslimat & Ödeme Bilgileri</h3>
+                <button onclick="toggleModal(false)" class="text-gray-500 font-bold text-xl">&times;</button>
+            </div>
+
+            <form id="order-form" onsubmit="submitOrder(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Adınız Soyadınız</label>
+                    <input type="text" id="cust-name" required class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Telefon Numaranız</label>
+                    <input type="tel" id="cust-phone" required placeholder="05XX..." class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Açık Adresiniz (Mahalle, Sokak, No, Daire)</label>
+                    <textarea id="cust-address" required rows="2" class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Ödeme Yöntemi</label>
+                    <select id="cust-payment" class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
+                        <option value="Kapıda Nakit">Kapıda Nakit Ödeme</option>
+                        <option value="Kapıda Kredi/Banka Kartı (POS)">Kapıda Kredi/Banka Kartı (POS)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Sipariş Notu (Opsiyonel)</label>
+                    <input type="text" id="cust-note" placeholder="Zile basmayın, sos bol olsun vb." class="w-full border p-2.5 rounded-lg text-sm mt-1">
+                </div>
+
+                <button type="submit" id="submit-btn" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-green-700 mt-2">
+                    <i class="fab fa-whatsapp"></i> WhatsApp ile Siparişi Gönder
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- AYARLAR ---
+        const WHATSAPP_NUMBER = "+905313724001"; // Kendi WhatsApp Numarani YAZ (Örn: 905321234567)
+        const MIN_ORDER_AMOUNT = 150; // Minimum Sipariş Tutarı (TL)
+
+        // --- MENÜ ÜRÜNLERİ ---
+        const products = [
+            { id: 1, name: "Sentory Özel Pizza (Orta)", category: "pizza", price: 220, desc: "Özel sos, mozzarella, sucuk, mısır, zeytin", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300" },
+            { id: 2, name: "Klasik Cheeseburger", category: "burger", price: 180, desc: "150gr köfte, cheddar, karamelize soğan, özel sos", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
+            { id: 3, name: "Çıtır Tavuk Wrap", category: "burger", price: 150, desc: "Özel marineli çıtır tavuk, marul, ev yapımı ranch sos", img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300" },
+            { id: 4, name: "Kutu Kola (330ml)", category: "icecek", price: 40, desc: "Soğuk içecek", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300" }
+        ];
+
+        let cart = {};
+
+        // Sayfa Yüklendiğinde
+        document.addEventListener("DOMContentLoaded", () => {
+            renderProducts(products);
+            loadSavedAddress();
+        });
+
+        // Ürünleri Ekrana Dizme
+        function renderProducts(list) {
+            const container = document.getElementById('product-list');
+            container.innerHTML = list.map(p => `
+                <div class="bg-white p-3 rounded-xl shadow-sm flex gap-3 items-center">
+                    <img src="${p.img}" class="w-20 h-20 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800 text-sm">${p.name}</h3>
+                        <p class="text-xs text-gray-500 line-clamp-2">${p.desc}</p>
+                        <p class="text-red-600 font-bold text-sm mt-1">${p.price} TL</p>
+                    </div>
+                    <div>
+                        <button onclick="addToCart(${p.id})" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                            + Ekle
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Kategori Filtreleme
+        function filterCategory(cat) {
+            if(cat === 'all') renderProducts(products);
+            else renderProducts(products.filter(p => p.category === cat));
+        }
+
+        // Sepete Ekleme
+        function addToCart(id) {
+            cart[id] = (cart[id] || 0) + 1;
+            updateCartUI();
+        }
+
+        // Sepet Arayüzünü Güncelleme
+        function updateCartUI() {
+            let total = 0;
+            let count = 0;
+
+            for(let id in cart) {
+                let product = products.find(p => p.id == id);
+                total += product.price * cart[id];
+                count += cart[id];
+            }
+
+            document.getElementById('cart-total').innerText = total + " TL";
+            const cartBar = document.getElementById('cart-bar');
+            const warn = document.getElementById('min-amount-warn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if(count > 0) {
+                cartBar.classList.remove('hidden');
+                if(total < MIN_ORDER_AMOUNT) {
+                    warn.classList.remove('hidden');
+                    warn.innerText = `Minimum sipariş tutarı ${MIN_ORDER_AMOUNT} TL'dir. (${MIN_ORDER_AMOUNT - total} TL daha ekleyin)`;
+                } else {
+                    warn.classList.add('hidden');
+                }
+            } else {
+                cartBar.classList.add('hidden');
+            }
+        }
+
+        // Modal Aç/Kapa
+        function toggleModal(show) {
+            let total = Object.keys(cart).reduce((sum, id) => sum + (products.find(p => p.id == id).price * cart[id]), 0);
+            if(show && total < MIN_ORDER_AMOUNT) {
+                alert(`Minimum paket sipariş tutarımız ${MIN_ORDER_AMOUNT} TL'dir.`);
+                return;
+            }
+            document.getElementById('checkout-modal').classList.toggle('hidden', !show);
+        }
+
+        // Adresi Otomatik Hatırlama (LocalStorage)
+        function loadSavedAddress() {
+            if(localStorage.getItem('cust_name')) document.getElementById('cust-name').value = localStorage.getItem('cust_name');
+            if(localStorage.getItem('cust_phone')) document.getElementById('cust-phone').value = localStorage.getItem('cust_phone');
+            if(localStorage.getItem('cust_address')) document.getElementById('cust-address').value = localStorage.getItem('cust_address');
+        }
+
+        // Siparişi Oluşturup WhatsApp'a Yönlendirme
+        function submitOrder(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const address = document.getElementById('cust-address').value;
+            const payment = document.getElementById('cust-payment').value;
+            const note = document.getElementById('cust-note').value;
+
+            // Bilgileri sonraki sipariş için hafızaya kaydet
+            localStorage.setItem('cust_name', name);
+            localStorage.setItem('cust_phone', phone);
+            localStorage.setItem('cust_address', address);
+
+            // Sipariş Detaylarını Hazırla
+            let orderText = `*YENİ PAKET SİPARİŞİ!* 🍕\n\n`;
+            let total = 0;
+
+            for(let id in cart) {
+                let p = products.find(prod => prod.id == id);
+                orderText += `• ${cart[id]}x ${p.name} - ${p.price * cart[id]} TL\n`;
+                total += p.price * cart[id];
+            }
+
+            orderText += `\n*Toplam Tutar:* ${total} TL\n`;
+            orderText += `*Ödeme Yöntemi:* ${payment}\n\n`;
+            orderText += `*Müşteri Bilgileri:*\n`;
+            orderText += `👤 *Ad:* ${name}\n`;
+            orderText += `📞 *Tel:* ${phone}\n`;
+            orderText += `📍 *Adres:* ${address}\n`;
+            if(note) orderText += `📝 *Not:* ${note}\n`;
+
+            // WhatsApp Linkini Aç
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderText)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
