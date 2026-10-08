@@ -3,167 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hızlı Sipariş Hatı</title>
-    <!-- Tailwind CSS (Tasarım için) -->
+    <title>Doktor Fast Food | Hızlı Sipariş Hattı</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans pb-24">
+<body class="bg-slate-100 font-sans pb-32 text-slate-800">
 
-    <!-- Üst Header -->
-    <header class="bg-red-600 text-white p-4 sticky top-0 z-50 shadow-md">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-red-700 via-red-600 to-amber-600 text-white p-4 sticky top-0 z-50 shadow-lg">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold">SENTORY PIZZA & BURGER</h1>
-                <p class="text-xs text-red-200">🚀 Komisyonsuz İndirimli Sipariş Hattı</p>
+                <h1 class="text-xl font-extrabold tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-utensils text-amber-300"></i> DOKTOR FAST FOOD
+                </h1>
+                <p class="text-xs text-red-100 mt-0.5">🚀 Komisyonsuz Direkt Sipariş Hattı</p>
             </div>
-            <a href="https://wa.me/905000000000" target="_blank" class="bg-green-500 text-white p-2 rounded-full text-sm font-bold flex items-center gap-1 shadow">
-                <i class="fab font-bold fa-whatsapp text-lg"></i> Destek
+            <a href="https://wa.me/905313724001" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition">
+                <i class="fab fa-whatsapp text-base"></i> Destek
             </a>
         </div>
     </header>
 
-    <!-- Kategori Tabları (Kaydırılabilir) -->
-    <nav class="bg-white border-b sticky top-[60px] z-40 shadow-sm">
-        <div class="max-w-md mx-auto flex overflow-x-auto no-scrollbar py-2 px-3 gap-2 text-sm font-semibold">
-            <button onclick="filterCategory('all')" class="bg-red-600 text-white px-4 py-1.5 rounded-full whitespace-nowrap">Tümü</button>
-            <button onclick="filterCategory('pizza')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">Pizzalar</button>
-            <button onclick="filterCategory('burger')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">Burgerler</button>
-            <button onclick="filterCategory('icecek')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full whitespace-nowrap">İçecekler</button>
+    <!-- Kategori Menüsü -->
+    <nav class="bg-white border-b sticky top-[65px] z-40 shadow-sm">
+        <div class="max-w-md mx-auto flex overflow-x-auto no-scrollbar py-2.5 px-3 gap-2 text-xs font-bold">
+            <button onclick="filterCategory('all')" class="cat-btn bg-red-600 text-white px-4 py-2 rounded-xl whitespace-nowrap shadow-sm transition">Tümü</button>
+            <button onclick="filterCategory('sandvic')" class="cat-btn bg-slate-100 text-slate-700 px-4 py-2 rounded-xl whitespace-nowrap transition">Sandviç & Wrap</button>
+            <button onclick="filterCategory('tost')" class="cat-btn bg-slate-100 text-slate-700 px-4 py-2 rounded-xl whitespace-nowrap transition">Tostlar</button>
+            <button onclick="filterCategory('pizza')" class="cat-btn bg-slate-100 text-slate-700 px-4 py-2 rounded-xl whitespace-nowrap transition">Pizzalar</button>
+            <button onclick="filterCategory('yan')" class="cat-btn bg-slate-100 text-slate-700 px-4 py-2 rounded-xl whitespace-nowrap transition">Atıştırmalıklar</button>
+            <button onclick="filterCategory('icecek')" class="cat-btn bg-slate-100 text-slate-700 px-4 py-2 rounded-xl whitespace-nowrap transition">İçecekler</button>
         </div>
     </nav>
 
     <!-- Ürün Listesi -->
-    <main class="max-w-md mx-auto p-4 space-y-4" id="product-list">
-        <!-- JavaScript Ürünleri Buraya Dizecek -->
+    <main class="max-w-md mx-auto p-4 space-y-3.5" id="product-list">
+        <!-- JS ürünleri buraya yerleştirecek -->
     </main>
 
-    <!-- Alt Sepet Barları -->
-    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 shadow-2xl hidden z-50">
-        <div class="max-w-md mx-auto flex justify-between items-center mb-2">
+    <!-- Alt Sepet Çubuğu -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3.5 shadow-2xl hidden z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center gap-3">
             <div>
-                <p class="text-xs text-gray-500">Toplam Tutarlar</p>
-                <p class="text-lg font-bold text-gray-800" id="cart-total">0 TL</p>
+                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sepet Toplamı</p>
+                <p class="text-xl font-black text-slate-900" id="cart-total">0 TL</p>
             </div>
-            <button onclick="toggleModal(true)" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md">
-                Siparişi Tamamla ➔
+            <button onclick="toggleModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold text-sm shadow-lg flex items-center gap-2 transition">
+                <span>Siparişi İncele</span>
+                <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
-        <p id="min-amount-warn" class="text-xs text-center text-red-500 font-semibold hidden">Min. Sipariş Tutarı: 150 TL</p>
+        <p id="min-amount-warn" class="text-xs text-center text-red-600 font-bold mt-2 hidden"></p>
     </div>
 
-    <!-- Müşteri Adres & Ödeme Modalı (Penceresi) -->
-    <div id="checkout-modal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center hidden">
-        <div class="bg-white w-full max-w-md rounded-t-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="text-lg font-bold">Teslimat & Ödeme Bilgileri</h3>
-                <button onclick="toggleModal(false)" class="text-gray-500 font-bold text-xl">&times;</button>
+    <!-- Müşteri & Sepet Detay Modalı -->
+    <div id="checkout-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center hidden">
+        <div class="bg-white w-full max-w-md rounded-t-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-basket-shopping text-red-600"></i> Sipariş Detayı
+                </h3>
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold p-1">&times;</button>
+            </div>
+
+            <!-- Sepetteki Ürünlerin Listesi -->
+            <div id="modal-cart-items" class="space-y-2 border-b pb-3 max-h-40 overflow-y-auto pr-1">
+                <!-- JS sepet detayını dolduracak -->
             </div>
 
             <form id="order-form" onsubmit="submitOrder(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-600">Adınız Soyadınız</label>
-                    <input type="text" id="cust-name" required class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ad Soyad</label>
+                    <input type="text" id="cust-name" required placeholder="Adınız Soyadınız" class="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600">Telefon Numaranız</label>
-                    <input type="tel" id="cust-phone" required placeholder="05XX..." class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Telefon Numarası</label>
+                    <input type="tel" id="cust-phone" required placeholder="05XX XXX XX XX" class="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600">Açık Adresiniz (Mahalle, Sokak, No, Daire)</label>
-                    <textarea id="cust-address" required rows="2" class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Açık Adres (Mahalle, Sokak, No, Daire)</label>
+                    <textarea id="cust-address" required rows="2" placeholder="Adres detaylarınızı yazın..." class="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600">Ödeme Yöntemi</label>
-                    <select id="cust-payment" class="w-full border p-2.5 rounded-lg text-sm mt-1 focus:ring-2 focus:ring-red-500 outline-none">
-                        <option value="Kapıda Nakit">Kapıda Nakit Ödeme</option>
-                        <option value="Kapıda Kredi/Banka Kartı (POS)">Kapıda Kredi/Banka Kartı (POS)</option>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Ödeme Yöntemi</label>
+                    <select id="cust-payment" class="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition font-medium">
+                        <option value="Kapıda Nakit Ödeme">💵 Kapıda Nakit Ödeme</option>
+                        <option value="Kapıda Kredi/Banka Kartı (POS)">💳 Kapıda Kredi / Banka Kartı (POS)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600">Sipariş Notu (Opsiyonel)</label>
-                    <input type="text" id="cust-note" placeholder="Zile basmayın, sos bol olsun vb." class="w-full border p-2.5 rounded-lg text-sm mt-1">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Sipariş Notu (Opsiyonel)</label>
+                    <input type="text" id="cust-note" placeholder="Zile basmayın, sos bol olsun vb." class="w-full border border-slate-300 p-2.5 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
                 </div>
 
-                <button type="submit" id="submit-btn" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-green-700 mt-2">
-                    <i class="fab fa-whatsapp"></i> WhatsApp ile Siparişi Gönder
+                <button type="submit" id="submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-extrabold text-sm shadow-xl flex items-center justify-center gap-2 transition mt-3">
+                    <i class="fab fa-whatsapp text-lg"></i>
+                    <span>Siparişi WhatsApp'a Gönder</span>
                 </button>
             </form>
         </div>
     </div>
 
     <script>
-        // --- AYARLAR ---
-        const WHATSAPP_NUMBER = "+905313724001"; // Kendi WhatsApp Numarani YAZ (Örn: 905321234567)
-        const MIN_ORDER_AMOUNT = 150; // Minimum Sipariş Tutarı (TL)
+        const WHATSAPP_NUMBER = "905313724001";
+        const MIN_ORDER_AMOUNT = 150;
 
-        // --- MENÜ ÜRÜNLERİ ---
         const products = [
-            { id: 1, name: "Sentory Özel Pizza (Orta)", category: "pizza", price: 220, desc: "Özel sos, mozzarella, sucuk, mısır, zeytin", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300" },
-            { id: 2, name: "Klasik Cheeseburger", category: "burger", price: 180, desc: "150gr köfte, cheddar, karamelize soğan, özel sos", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
-            { id: 3, name: "Çıtır Tavuk Wrap", category: "burger", price: 150, desc: "Özel marineli çıtır tavuk, marul, ev yapımı ranch sos", img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300" },
-            { id: 4, name: "Kutu Kola (330ml)", category: "icecek", price: 40, desc: "Soğuk içecek", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300" }
+            { id: 1, name: "Soğuk Tavuk Sandviç", category: "sandvic", price: 130, desc: "Özel soslu tavuk salatası, mısır, taze yeşillik, domates", img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400" },
+            { id: 2, name: "Çıtır Tavuk Wrap", category: "sandvic", price: 150, desc: "Çıtır tavuk dilimleri, marul, ev yapımı ranch sos, patates", img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400" },
+            { id: 3, name: "Süper Karışık Tost", category: "tost", price: 110, desc: "Bol kaşar peyniri, kaliteli kasap sucuk, domates salçası", img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400" },
+            { id: 4, name: "Doktor Özel Pizza (Orta Boy)", category: "pizza", price: 240, desc: "Özel pizza sosu, mozzarella, sucuk, sosis, mısır, zeytin, biber", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400" },
+            { id: 5, name: "Margarita Pizza (Orta Boy)", category: "pizza", price: 190, desc: "İtalyan usulü domates sosu, bol mozzarella peyniri, fesleğen", img: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=400" },
+            { id: 6, name: "Patates Kızartması (Dublesi)", category: "yan", price: 70, desc: "Baharatlı çıtır elma dilim / parmak patates", img: "https://images.unsplash.com/photo-1576107232684-1279f390859f?w=400" },
+            { id: 7, name: "Çıtır Soğan Halkası (8'li)", category: "yan", price: 60, desc: "Altın sarısı panelenmiş çıtır soğan halkaları", img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400" },
+            { id: 8, name: "Kutu Kola (330 ml)", category: "icecek", price: 45, desc: "Soğuk kutu içecek", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" },
+            { id: 9, name: "Ayran (300 ml)", category: "icecek", price: 25, desc: "Geleneksel yayık ayranı", img: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=400" }
         ];
 
         let cart = {};
 
-        // Sayfa Yüklendiğinde
         document.addEventListener("DOMContentLoaded", () => {
             renderProducts(products);
             loadSavedAddress();
         });
 
-        // Ürünleri Ekrana Dizme
         function renderProducts(list) {
             const container = document.getElementById('product-list');
-            container.innerHTML = list.map(p => `
-                <div class="bg-white p-3 rounded-xl shadow-sm flex gap-3 items-center">
-                    <img src="${p.img}" class="w-20 h-20 object-cover rounded-lg">
-                    <div class="flex-1">
-                        <h3 class="font-bold text-gray-800 text-sm">${p.name}</h3>
-                        <p class="text-xs text-gray-500 line-clamp-2">${p.desc}</p>
-                        <p class="text-red-600 font-bold text-sm mt-1">${p.price} TL</p>
+            container.innerHTML = list.map(p => {
+                const qty = cart[p.id] || 0;
+                return `
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 flex gap-3 items-center hover:shadow-md transition">
+                    <img src="${p.img}" alt="${p.name}" class="w-22 h-22 object-cover rounded-xl bg-slate-100 flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-800 text-sm truncate">${p.name}</h3>
+                        <p class="text-xs text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">${p.desc}</p>
+                        <p class="text-red-600 font-extrabold text-sm mt-1">${p.price} TL</p>
                     </div>
-                    <div>
-                        <button onclick="addToCart(${p.id})" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
-                            + Ekle
-                        </button>
+                    <div class="flex-shrink-0">
+                        ${qty === 0 ? `
+                            <button onclick="changeQty(${p.id}, 1)" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                                + Ekle
+                            </button>
+                        ` : `
+                            <div class="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+                                <button onclick="changeQty(${p.id}, -1)" class="w-7 h-7 bg-white text-red-600 font-extrabold rounded-lg shadow-sm flex items-center justify-center text-xs hover:bg-red-50 transition">-</button>
+                                <span class="px-2.5 text-xs font-black text-slate-800">${qty}</span>
+                                <button onclick="changeQty(${p.id}, 1)" class="w-7 h-7 bg-red-600 text-white font-extrabold rounded-lg shadow-sm flex items-center justify-center text-xs hover:bg-red-700 transition">+</button>
+                            </div>
+                        `}
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        // Kategori Filtreleme
         function filterCategory(cat) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-red-600', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-slate-700');
+            });
+            event.target.classList.remove('bg-slate-100', 'text-slate-700');
+            event.target.classList.add('bg-red-600', 'text-white');
+
             if(cat === 'all') renderProducts(products);
             else renderProducts(products.filter(p => p.category === cat));
         }
 
-        // Sepete Ekleme
-        function addToCart(id) {
-            cart[id] = (cart[id] || 0) + 1;
+        function changeQty(id, delta) {
+            const currentQty = cart[id] || 0;
+            const newQty = currentQty + delta;
+            
+            if (newQty <= 0) {
+                delete cart[id];
+            } else {
+                cart[id] = newQty;
+            }
+
+            const activeCat = document.querySelector('.cat-btn.bg-red-600').getAttribute('onclick').match(/'([^']+)'/)[1];
+            filterCategory(activeCat);
             updateCartUI();
         }
 
-        // Sepet Arayüzünü Güncelleme
         function updateCartUI() {
             let total = 0;
             let count = 0;
 
             for(let id in cart) {
                 let product = products.find(p => p.id == id);
-                total += product.price * cart[id];
-                count += cart[id];
+                if(product) {
+                    total += product.price * cart[id];
+                    count += cart[id];
+                }
             }
 
             document.getElementById('cart-total').innerText = total + " TL";
             const cartBar = document.getElementById('cart-bar');
             const warn = document.getElementById('min-amount-warn');
-            const submitBtn = document.getElementById('submit-btn');
 
             if(count > 0) {
                 cartBar.classList.remove('hidden');
@@ -176,11 +215,40 @@
             } else {
                 cartBar.classList.add('hidden');
             }
+            renderModalCart();
         }
 
-        // Modal Aç/Kapa
+        function renderModalCart() {
+            const container = document.getElementById('modal-cart-items');
+            let html = '';
+
+            for(let id in cart) {
+                let p = products.find(prod => prod.id == id);
+                if(p) {
+                    html += `
+                        <div class="flex justify-between items-center text-xs py-1 border-b border-slate-100">
+                            <div class="flex-1 pr-2">
+                                <span class="font-bold text-slate-800">${p.name}</span>
+                                <span class="text-slate-500 block">${p.price} TL x ${cart[id]} = ${p.price * cart[id]} TL</span>
+                            </div>
+                            <div class="flex items-center bg-slate-100 rounded-lg p-0.5">
+                                <button onclick="changeQty(${p.id}, -1)" class="w-6 h-6 bg-white text-red-600 font-bold rounded flex items-center justify-center">-</button>
+                                <span class="px-2 font-bold text-slate-800">${cart[id]}</span>
+                                <button onclick="changeQty(${p.id}, 1)" class="w-6 h-6 bg-red-600 text-white font-bold rounded flex items-center justify-center">+</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html || '<p class="text-xs text-slate-400">Sepetiniz boş.</p>';
+        }
+
         function toggleModal(show) {
-            let total = Object.keys(cart).reduce((sum, id) => sum + (products.find(p => p.id == id).price * cart[id]), 0);
+            let total = Object.keys(cart).reduce((sum, id) => {
+                let p = products.find(prod => prod.id == id);
+                return sum + (p ? p.price * cart[id] : 0);
+            }, 0);
+
             if(show && total < MIN_ORDER_AMOUNT) {
                 alert(`Minimum paket sipariş tutarımız ${MIN_ORDER_AMOUNT} TL'dir.`);
                 return;
@@ -188,14 +256,12 @@
             document.getElementById('checkout-modal').classList.toggle('hidden', !show);
         }
 
-        // Adresi Otomatik Hatırlama (LocalStorage)
         function loadSavedAddress() {
             if(localStorage.getItem('cust_name')) document.getElementById('cust-name').value = localStorage.getItem('cust_name');
             if(localStorage.getItem('cust_phone')) document.getElementById('cust-phone').value = localStorage.getItem('cust_phone');
             if(localStorage.getItem('cust_address')) document.getElementById('cust-address').value = localStorage.getItem('cust_address');
         }
 
-        // Siparişi Oluşturup WhatsApp'a Yönlendirme
         function submitOrder(e) {
             e.preventDefault();
 
@@ -205,30 +271,29 @@
             const payment = document.getElementById('cust-payment').value;
             const note = document.getElementById('cust-note').value;
 
-            // Bilgileri sonraki sipariş için hafızaya kaydet
             localStorage.setItem('cust_name', name);
             localStorage.setItem('cust_phone', phone);
             localStorage.setItem('cust_address', address);
 
-            // Sipariş Detaylarını Hazırla
-            let orderText = `*YENİ PAKET SİPARİŞİ!* 🍕\n\n`;
+            let orderText = `*YENİ PAKET SİPARİŞİ! (Doktor Fast Food)* 🍕\n\n`;
             let total = 0;
 
             for(let id in cart) {
                 let p = products.find(prod => prod.id == id);
-                orderText += `• ${cart[id]}x ${p.name} - ${p.price * cart[id]} TL\n`;
-                total += p.price * cart[id];
+                if(p) {
+                    orderText += `• ${cart[id]}x ${p.name} - ${p.price * cart[id]} TL\n`;
+                    total += p.price * cart[id];
+                }
             }
 
             orderText += `\n*Toplam Tutar:* ${total} TL\n`;
             orderText += `*Ödeme Yöntemi:* ${payment}\n\n`;
             orderText += `*Müşteri Bilgileri:*\n`;
-            orderText += `👤 *Ad:* ${name}\n`;
+            orderText += `👤 *Ad Soyad:* ${name}\n`;
             orderText += `📞 *Tel:* ${phone}\n`;
             orderText += `📍 *Adres:* ${address}\n`;
             if(note) orderText += `📝 *Not:* ${note}\n`;
 
-            // WhatsApp Linkini Aç
             const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderText)}`;
             window.open(url, '_blank');
         }
