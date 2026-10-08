@@ -14,13 +14,13 @@
   tailwind.config = {
     theme: { extend: {
       fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
-      colors: { brand: { 50:'#fff5f0', 100:'#ffe6da', 500:'#e11d2e', 600:'#c8101f', 700:'#a30b18', 800:'#7f0a14' }, amber2: '#f59e0b' }
+      colors: { brand: { 50:'#fff5f0', 100:'#ffe6da', 500:'#e11d2e', 600:'#c8101f', 700:'#a30b18', 800:'#7f0a14' } }
     } }
   }
 </script>
 <style>
   html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-  body { background:#fbf6f1; padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  body { background:#fbf6f1; padding-bottom: 24px; }
   .no-scrollbar::-webkit-scrollbar { display:none; }
   .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
   .sheet { transform: translateY(100%); transition: transform .3s ease; }
@@ -36,7 +36,7 @@
 <body class="font-sans text-stone-800">
 
 <!-- HEADER -->
-<header class="sticky top-0 z-30 bg-gradient-to-r from-brand-700 to-brand-500 text-white shadow-md" style="padding-top:env(safe-area-inset-top)">
+<header id="topHeader" class="sticky top-0 z-30 bg-gradient-to-r from-brand-700 to-brand-500 text-white shadow-md" style="padding-top:env(safe-area-inset-top)">
   <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
     <div class="flex items-center gap-3 min-w-0">
       <div class="w-10 h-10 rounded-xl bg-amber-400 text-brand-800 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-user-doctor"></i></div>
@@ -49,13 +49,11 @@
       <i class="fa-brands fa-whatsapp text-lg"></i><span>Destek</span>
     </a>
   </div>
-  <div class="bg-amber-400 text-brand-800 text-xs font-semibold text-center py-1.5 px-3">
-    <i class="fa-solid fa-tag mr-1"></i>Yemek uygulamalarından daha uygun fiyat, komisyon yok. Minimum sipariş 150 TL.
-  </div>
+  <div id="promoBanner" class="bg-amber-400 text-brand-800 text-xs font-bold text-center py-1.5 px-3"></div>
 </header>
 
 <!-- KATEGORİLER -->
-<nav class="sticky z-20 bg-[#fbf6f1]/95 backdrop-blur border-b border-stone-200" style="top:calc(env(safe-area-inset-top) + 94px)" id="catNav">
+<nav class="sticky z-20 bg-[#fbf6f1]/95 backdrop-blur border-b border-stone-200" id="catNav">
   <div id="tabs" class="max-w-2xl mx-auto flex gap-2 overflow-x-auto no-scrollbar px-4 py-3"></div>
 </nav>
 
@@ -64,7 +62,7 @@
 
 <footer class="max-w-2xl mx-auto px-4 py-8 text-center text-xs text-stone-500">
   <p>© Doktor Fast Food · Edirne</p>
-  <p class="mt-1">Fiyatlara KDV dahildir. Siparişiniz WhatsApp üzerinden onaylanır.</p>
+  <p class="mt-1">Siparişiniz WhatsApp üzerinden onaylanır.</p>
 </footer>
 
 <!-- SEPET ÇUBUĞU -->
@@ -79,7 +77,7 @@
             <span id="cartCount" class="absolute -top-1.5 -right-1.5 bg-amber-400 text-brand-800 text-[11px] font-extrabold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">0</span>
           </span>
           <span class="min-w-0">
-            <span class="block text-xs text-stone-500">Toplam</span>
+            <span class="block text-xs text-stone-500">Toplam <span id="cartSaved" class="text-green-600 font-semibold"></span></span>
             <span id="cartTotal" class="block font-extrabold text-lg leading-tight">0 TL</span>
           </span>
         </button>
@@ -88,6 +86,38 @@
     </div>
   </div>
 </div>
+
+<!-- MALZEME SEÇİM PENCERESİ -->
+<div id="optBackdrop" class="backdrop fixed inset-0 bg-black/50 z-[55]"></div>
+<section id="optSheet" class="sheet fixed inset-x-0 bottom-0 z-[56] max-h-[88vh] flex flex-col bg-[#fbf6f1] rounded-t-3xl shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="optTitle">
+  <div class="max-w-2xl mx-auto w-full flex flex-col min-h-0">
+    <div class="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-stone-200">
+      <div class="min-w-0">
+        <h2 id="optTitle" class="font-extrabold text-lg leading-tight"></h2>
+        <p id="optDesc" class="text-xs text-stone-500 mt-1"></p>
+      </div>
+      <button id="optClose" class="w-9 h-9 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center shrink-0" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-4 space-y-4">
+      <div id="optFixedWrap">
+        <h3 class="font-bold text-sm mb-1.5">Sabit malzemeler</h3>
+        <p id="optFixed" class="text-sm text-stone-600"></p>
+      </div>
+      <div id="optListWrap">
+        <h3 class="font-bold text-sm mb-1"><i class="fa-solid fa-sliders text-brand-600 mr-1.5"></i>İstemediğiniz malzemenin işaretini kaldırın</h3>
+        <div id="optList" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100"></div>
+      </div>
+    </div>
+    <div class="px-5 pt-3 border-t border-stone-200 bg-white flex items-center gap-3" style="padding-bottom:calc(12px + env(safe-area-inset-bottom))">
+      <div class="flex items-center bg-brand-50 border border-brand-100 rounded-full shrink-0">
+        <button id="optMinus" class="w-10 h-10 rounded-full text-brand-600" aria-label="Azalt"><i class="fa-solid fa-minus"></i></button>
+        <span id="optQty" class="w-7 text-center font-extrabold">1</span>
+        <button id="optPlus" class="w-10 h-10 rounded-full bg-brand-600 text-white" aria-label="Artır"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <button id="optAdd" class="flex-1 bg-brand-600 hover:bg-brand-700 active:scale-[.98] transition text-white font-bold rounded-xl py-3"></button>
+    </div>
+  </div>
+</section>
 
 <!-- CHECKOUT -->
 <div id="backdrop" class="backdrop fixed inset-0 bg-black/50 z-50"></div>
@@ -99,17 +129,19 @@
     </div>
 
     <div class="overflow-y-auto px-5 py-4 space-y-5">
-      <!-- Sepet özeti -->
       <div>
         <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-receipt text-brand-600 mr-1.5"></i>Sepet özeti</h3>
         <div id="summary" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100"></div>
-        <div class="flex justify-between items-center mt-3 px-1">
-          <span class="font-semibold">Toplam</span>
-          <span id="sumTotal" class="font-extrabold text-xl text-brand-600">0 TL</span>
+        <div class="mt-3 px-1 space-y-1 text-sm">
+          <div class="flex justify-between text-stone-500"><span>Liste fiyatı</span><span id="sumList" class="line-through"></span></div>
+          <div class="flex justify-between text-green-600 font-semibold"><span id="sumDiscLabel"></span><span id="sumDisc"></span></div>
+          <div class="flex justify-between items-center pt-1">
+            <span class="font-semibold">Ödenecek tutar</span>
+            <span id="sumTotal" class="font-extrabold text-xl text-brand-600">0 TL</span>
+          </div>
         </div>
       </div>
 
-      <!-- Müşteri bilgileri -->
       <div>
         <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-location-dot text-brand-600 mr-1.5"></i>Teslimat bilgileri</h3>
         <div class="space-y-3">
@@ -127,7 +159,7 @@
           </div>
           <div>
             <label for="fNote" class="text-xs font-semibold text-stone-600">Sipariş notu (isteğe bağlı)</label>
-            <textarea id="fNote" rows="2" class="w-full mt-1 rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm focus:border-brand-500" placeholder="Örn: Soğansız olsun, zile basmayın"></textarea>
+            <textarea id="fNote" rows="2" class="w-full mt-1 rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm focus:border-brand-500" placeholder="Örn: Zile basmayın, kapıyı çalın"></textarea>
           </div>
           <label class="flex items-center gap-2 text-xs text-stone-600">
             <input id="fRemember" type="checkbox" checked class="accent-brand-600 w-4 h-4">
@@ -136,10 +168,9 @@
         </div>
       </div>
 
-      <!-- Ödeme -->
       <div>
         <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-wallet text-brand-600 mr-1.5"></i>Ödeme yöntemi</h3>
-        <div class="grid grid-cols-2 gap-3" id="payOptions">
+        <div class="grid grid-cols-2 gap-3">
           <label class="cursor-pointer">
             <input type="radio" name="pay" value="Kapıda Nakit" class="peer sr-only" checked>
             <div class="peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-400 border-2 border-stone-200 bg-white rounded-xl p-3 text-center text-sm font-semibold">
@@ -165,7 +196,7 @@
   </div>
 </section>
 
-<div id="toast" class="fixed left-1/2 -translate-x-1/2 top-24 z-[60] bg-stone-900 text-white text-sm px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity"></div>
+<div id="toast" class="fixed left-1/2 -translate-x-1/2 top-28 z-[70] bg-stone-900 text-white text-sm px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity"></div>
 
 <script>
 (function () {
@@ -173,69 +204,135 @@
 
   /* ---------- AYARLAR ---------- */
   const WA_NUMBER = '905313724001';
-  const MIN_ORDER = 150;
+  const MIN_ORDER = 250;          // Minimum sepet tutarı (indirimli toplam üzerinden)
+  const DISCOUNT = 0.20;          // Tüm ürünlere %20 indirim
   const STORE_NAME = 'Doktor Fast Food';
   const LS_CUSTOMER = 'dff_customer_v1';
+  const IMG_BASE = 'https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/484029/';
 
   /* ---------- MENÜ ----------
-     img alanına görsel yolu/URL yazarsanız kartta fotoğraf görünür.
-     Boş bırakılırsa kategori ikonu gösterilir. */
+     price : liste (indirimsiz) fiyat
+     fixed : çıkarılamayan ana malzemeler
+     opt   : müşterinin çıkarabileceği malzemeler
+     img   : görsel dosya adı (boşsa kategori ikonu görünür) */
   const CATEGORIES = [
-    { id: 'sandvic', name: 'Sandviçler',   icon: 'fa-burger' },
-    { id: 'durum',   name: 'Dürümler',     icon: 'fa-bacon' },
-    { id: 'tost',    name: 'Tostlar',      icon: 'fa-bread-slice' },
+    { id: 'sandvic',   name: 'Sandviçler',      icon: 'fa-burger' },
+    { id: 'durum',     name: 'Dürümler',        icon: 'fa-bacon' },
+    { id: 'tost',      name: 'Tostlar',         icon: 'fa-bread-slice' },
     { id: 'atistirma', name: 'Atıştırmalıklar', icon: 'fa-bowl-food' },
-    { id: 'icecek',  name: 'İçecekler',    icon: 'fa-bottle-water' }
+    { id: 'icecek',    name: 'İçecekler',       icon: 'fa-bottle-water' }
   ];
 
   const PRODUCTS = [
-    // Sandviç Çeşitleri
-    { id: 's1', cat: 'sandvic', name: 'Sentory Tavuklu Sandviç', desc: 'Sentory soslu tavuk sandviç', price: 250, img: '' },
-    { id: 's2', cat: 'sandvic', name: 'BBQ Tavuklu Sandviç',     desc: 'BBQ soslu tavuk sandviç', price: 250, img: '' },
-    { id: 's3', cat: 'sandvic', name: 'Ranch Tavuklu Sandviç',   desc: 'Ranch soslu tavuk sandviç', price: 250, img: '' },
-    { id: 's4', cat: 'sandvic', name: 'Soğuk Tavuklu Sandviç',   desc: 'Soğuk servis edilen tavuklu sandviç', price: 250, img: '' },
-    { id: 's5', cat: 'sandvic', name: 'Pastırmalı Sandviç',      desc: 'Pastırmalı sandviç', price: 280, img: '' },
-    { id: 's6', cat: 'sandvic', name: 'Sucuklu Sandviç',         desc: 'Sucuklu sandviç', price: 250, img: '' },
-    { id: 's7', cat: 'sandvic', name: 'Etsever Sandviç',         desc: 'Et severler için doyurucu sandviç', price: 350, img: '' },
-    { id: 's8', cat: 'sandvic', name: 'Ton Balıklı Sandviç',     desc: 'Ton balıklı sandviç', price: 300, img: '' },
-    // Dürüm Çeşitleri
-    { id: 'd1', cat: 'durum', name: 'Sentory Tavuk Dürüm', desc: 'Sentory soslu tavuk dürüm', price: 280, img: '' },
-    { id: 'd2', cat: 'durum', name: 'BBQ Tavuk Dürüm',     desc: 'BBQ soslu tavuk dürüm', price: 280, img: '' },
-    { id: 'd3', cat: 'durum', name: 'Ranch Tavuk Dürüm',   desc: 'Ranch soslu tavuk dürüm', price: 280, img: '' },
-    { id: 'd4', cat: 'durum', name: 'Sentory Beef Dürüm',  desc: 'Sentory soslu dana eti dürüm', price: 400, img: '' },
-    { id: 'd5', cat: 'durum', name: 'BBQ Beef Dürüm',      desc: 'BBQ soslu dana eti dürüm', price: 400, img: '' },
-    { id: 'd6', cat: 'durum', name: 'Hardallı Beef Dürüm', desc: 'Hardal soslu dana eti dürüm', price: 400, img: '' },
-    // Tost Çeşitleri
-    { id: 't1', cat: 'tost', name: 'Karışık Tost',   desc: 'Karışık malzemeli tost', price: 200, img: '' },
-    { id: 't2', cat: 'tost', name: 'Sucuklu Tost',   desc: 'Sucuklu tost', price: 180, img: '' },
-    { id: 't3', cat: 'tost', name: 'Pastırmalı Tost', desc: 'Pastırmalı tost', price: 200, img: '' },
-    { id: 't4', cat: 'tost', name: 'Kaşarlı Tost',   desc: 'Kaşar peynirli tost', price: 150, img: '' },
-    // Atıştırmalıklar
-    { id: 'a1', cat: 'atistirma', name: 'Patates Kızartması', desc: 'Sıcak, çıtır patates kızartması', price: 150, img: '' },
-    { id: 'a2', cat: 'atistirma', name: "Soğan Halkası 10'lu", desc: '10 adet çıtır soğan halkası', price: 130, img: '' },
-    // İçecekler
-    { id: 'i1', cat: 'icecek', name: 'Coca Cola',      desc: 'Kutu içecek', price: 120, img: '' },
-    { id: 'i2', cat: 'icecek', name: 'Coca Cola Zero', desc: 'Şekersiz kutu içecek', price: 120, img: '' },
-    { id: 'i3', cat: 'icecek', name: 'Coca Cola 1L',   desc: '1 litrelik şişe', price: 160, img: '' },
-    { id: 'i4', cat: 'icecek', name: 'Su 0.5L',        desc: '0,5 litrelik su', price: 40, img: '' }
+    // ---- Sandviç Çeşitleri ----
+    { id: 's1', cat: 'sandvic', name: 'Sentory Tavuklu Sandviç', price: 250, img: '21631943_1790093401145.png',
+      desc: 'Fırınlanmış ekmek içerisine soslu tavuk, kaşar, domates, lahana salatası ve özel sentory sosu',
+      fixed: ['Fırınlanmış ekmek', 'Soslu tavuk'], opt: ['Kaşar', 'Domates', 'Lahana salatası', 'Sentory sosu'] },
+    { id: 's2', cat: 'sandvic', name: 'BBQ Tavuklu Sandviç', price: 250, img: '21631944_1790093470355.png',
+      desc: 'Fırınlanmış ekmek içerisine soslu tavuk, kaşar, domates, lahana salatası, bbq sosu ve mayonez',
+      fixed: ['Fırınlanmış ekmek', 'Soslu tavuk'], opt: ['Kaşar', 'Domates', 'Lahana salatası', 'BBQ sosu', 'Mayonez'] },
+    { id: 's3', cat: 'sandvic', name: 'Ranch Tavuklu Sandviç', price: 250, img: '21631945_1790093606435.png',
+      desc: 'Fırınlanmış ekmek içerisine soslu tavuk, kaşar, domates, lahana salatası ve özel ranch sosu',
+      fixed: ['Fırınlanmış ekmek', 'Soslu tavuk'], opt: ['Kaşar', 'Domates', 'Lahana salatası', 'Ranch sosu'] },
+    { id: 's4', cat: 'sandvic', name: 'Soğuk Tavuklu Sandviç', price: 250, img: '',
+      desc: '', fixed: [], opt: [] },
+    { id: 's5', cat: 'sandvic', name: 'Kumru Sandviç', price: 250, img: '21709132_1790281095272.jpg',
+      desc: 'Fırınlanmış ekmek içerisine sosis, sucuk, kaşar peyniri, domates ve sentory sos',
+      fixed: ['Fırınlanmış ekmek', 'Sosis', 'Sucuk'], opt: ['Kaşar peyniri', 'Domates', 'Sentory sos'] },
+    { id: 's6', cat: 'sandvic', name: 'Pastırmalı Sandviç', price: 280, img: '21631947_1790093707723.png',
+      desc: 'Fırınlanmış ekmek içerisine pastırma, kaşar, domates, lahana salatası ve özel sentory sosu',
+      fixed: ['Fırınlanmış ekmek', 'Pastırma'], opt: ['Kaşar', 'Domates', 'Lahana salatası', 'Sentory sosu'] },
+    { id: 's7', cat: 'sandvic', name: 'Sucuklu Sandviç', price: 250, img: '21631948_1790093766473.png',
+      desc: 'Fırınlanmış ekmek içerisine sucuk, kaşar, domates, lahana salatası ve özel sentory sosu',
+      fixed: ['Fırınlanmış ekmek', 'Sucuk'], opt: ['Kaşar', 'Domates', 'Lahana salatası', 'Sentory sosu'] },
+    { id: 's8', cat: 'sandvic', name: 'Etsever Sandviç', price: 350, img: '21631949_1790093813895.png',
+      desc: 'Fırınlanmış ekmek içerisine pastırma, sucuk, hindi füme, kaşar, domates, marul ve özel sentory sosu',
+      fixed: ['Fırınlanmış ekmek', 'Pastırma', 'Sucuk', 'Hindi füme'], opt: ['Kaşar', 'Domates', 'Marul', 'Sentory sosu'] },
+    { id: 's9', cat: 'sandvic', name: 'Ton Balıklı Sandviç', price: 300, img: '21631950_1790093871639.png',
+      desc: 'Fırınlanmış ekmek içerisine ton balığı, soğan, domates, marul ve özel sentory sosu',
+      fixed: ['Fırınlanmış ekmek', 'Ton balığı'], opt: ['Soğan', 'Domates', 'Marul', 'Sentory sosu'] },
+    { id: 's10', cat: 'sandvic', name: 'Beyaz Peynirli Sandviç', price: 230, img: '21653279_1790095873844.jpg',
+      desc: 'Beyaz peyniri, domates, salam ve özel sos',
+      fixed: ['Beyaz peynir'], opt: ['Domates', 'Salam', 'Özel sos'] },
+
+    // ---- Dürüm Çeşitleri ----
+    { id: 'd1', cat: 'durum', name: 'Sentory Tavuk Dürüm', price: 280, img: '21631951_1790094146142.jpg',
+      desc: 'Sıcak lavaş içerisine soslu tavuk, kaşar, patates, domates, lahana salatası ve özel sentory sosu',
+      fixed: ['Sıcak lavaş', 'Soslu tavuk'], opt: ['Kaşar', 'Patates', 'Domates', 'Lahana salatası', 'Sentory sosu'] },
+    { id: 'd2', cat: 'durum', name: 'BBQ Tavuk Dürüm', price: 280, img: '21631952_1790094196238.jpg',
+      desc: 'Sıcak lavaş içerisine soslu tavuk, kaşar, patates, domates, lahana salatası, özel bbq sosu ve mayonez',
+      fixed: ['Sıcak lavaş', 'Soslu tavuk'], opt: ['Kaşar', 'Patates', 'Domates', 'Lahana salatası', 'BBQ sosu', 'Mayonez'] },
+    { id: 'd3', cat: 'durum', name: 'Ranch Tavuk Dürüm', price: 280, img: '21631953_1790094269657.jpg',
+      desc: 'Sıcak lavaş içerisine soslu tavuk, patates, kaşar, domates, lahana salatası ve özel ranch sosu',
+      fixed: ['Sıcak lavaş', 'Soslu tavuk'], opt: ['Patates', 'Kaşar', 'Domates', 'Lahana salatası', 'Ranch sosu'] },
+    { id: 'd4', cat: 'durum', name: 'Sentory Beef Dürüm', price: 400, img: '21631954_1790094470638.jpg',
+      desc: 'Sıcak lavaş içerisine soslu kıyma, kaşar, patates, soğan, domates, lahana salatası ve özel sentory sosu',
+      fixed: ['Sıcak lavaş', 'Soslu kıyma'], opt: ['Kaşar', 'Patates', 'Soğan', 'Domates', 'Lahana salatası', 'Sentory sosu'] },
+    { id: 'd5', cat: 'durum', name: 'BBQ Beef Dürüm', price: 400, img: '21631955_1790094547114.jpg',
+      desc: 'Sıcak lavaş içerisine soslu kıyma, kaşar, patates, soğan, domates, lahana salatası, mayonez ve özel bbq sosu',
+      fixed: ['Sıcak lavaş', 'Soslu kıyma'], opt: ['Kaşar', 'Patates', 'Soğan', 'Domates', 'Lahana salatası', 'Mayonez', 'BBQ sosu'] },
+    { id: 'd6', cat: 'durum', name: 'Hardallı Beef Dürüm', price: 400, img: '21631956_1790094550527.jpg',
+      desc: 'Sıcak lavaş içerisine soslu kıyma, kaşar, patates, soğan, domates, lahana salatası ve ballı hardal',
+      fixed: ['Sıcak lavaş', 'Soslu kıyma'], opt: ['Kaşar', 'Patates', 'Soğan', 'Domates', 'Lahana salatası', 'Ballı hardal'] },
+
+    // ---- Tost Çeşitleri ----
+    { id: 't1', cat: 'tost', name: 'Karışık Tost', price: 200, img: '21631957_1790094852081.png',
+      desc: 'Tost ekmeği içerisine pastırma, sucuk, kaşar, domates sosu',
+      fixed: ['Tost ekmeği', 'Pastırma', 'Sucuk'], opt: ['Kaşar', 'Domates sosu'] },
+    { id: 't2', cat: 'tost', name: 'Sucuklu Tost', price: 180, img: '21631958_1790058633961.jpg',
+      desc: 'Tost ekmeği içerisine sucuk, kaşar, domates sosu',
+      fixed: ['Tost ekmeği', 'Sucuk'], opt: ['Kaşar', 'Domates sosu'] },
+    { id: 't3', cat: 'tost', name: 'Pastırmalı Tost', price: 200, img: '21631959_1790094935136.png',
+      desc: 'Tost ekmeği içerisine pastırma, kaşar, domates sosu',
+      fixed: ['Tost ekmeği', 'Pastırma'], opt: ['Kaşar', 'Domates sosu'] },
+    { id: 't4', cat: 'tost', name: 'Kaşarlı Tost', price: 150, img: '21631960_1790058641479.jpg',
+      desc: 'Tost ekmeği içerisine kaşar, domates sosu',
+      fixed: ['Tost ekmeği', 'Kaşar'], opt: ['Domates sosu'] },
+
+    // ---- Atıştırmalıklar ----
+    { id: 'a1', cat: 'atistirma', name: 'Patates Kızartması', price: 150, img: '21631961_1790058651429.jpg',
+      desc: 'Sıcak servis edilir', fixed: [], opt: [] },
+    { id: 'a2', cat: 'atistirma', name: "Soğan Halkası 10'lu", price: 130, img: '21631962_1790058658007.jpg',
+      desc: 'Sıcak servis edilir', fixed: [], opt: [] },
+
+    // ---- İçecekler ----
+    { id: 'i1', cat: 'icecek', name: 'Coca Cola',      price: 120, img: '21631963_1790058667176.png', desc: '', fixed: [], opt: [] },
+    { id: 'i2', cat: 'icecek', name: 'Coca Cola Zero', price: 120, img: '', desc: '', fixed: [], opt: [] },
+    { id: 'i3', cat: 'icecek', name: 'Coca Cola 1L',   price: 160, img: '21631965_1790058678073.png', desc: '', fixed: [], opt: [] },
+    { id: 'i4', cat: 'icecek', name: 'Su 0.5L',        price: 40,  img: '21631966_1790058681549.jpg', desc: '', fixed: [], opt: [] },
+    { id: 'i5', cat: 'icecek', name: 'Ayran (30 cc)',  price: 80,  img: '21643969_1790080250730.jpg', desc: '', fixed: [], opt: [] }
   ];
 
   /* ---------- DURUM ---------- */
-  const cart = {}; // { productId: adet }
+  const lines = {};   // { "id|kaldırılanlar": { id, removed:[], qty } }
   let activeCat = 'all';
+  let opt = { id: null, removed: new Set(), qty: 1 };
 
   const $ = (s) => document.querySelector(s);
   const fmt = (n) => n.toLocaleString('tr-TR') + ' TL';
   const byId = (id) => PRODUCTS.find((p) => p.id === id);
+  const sale = (p) => Math.round(p.price * (1 - DISCOUNT));
+  const pct = Math.round(DISCOUNT * 100);
   const catIcon = (id) => (CATEGORIES.find((c) => c.id === id) || {}).icon || 'fa-utensils';
+  const lineKey = (id, removed) => id + '|' + removed.join(',');
+  const qtyOf = (id) => Object.values(lines).filter((l) => l.id === id).reduce((a, l) => a + l.qty, 0);
 
   function totals() {
-    let total = 0, count = 0;
-    for (const id in cart) { total += byId(id).price * cart[id]; count += cart[id]; }
-    return { total, count };
+    let total = 0, list = 0, count = 0;
+    for (const k in lines) {
+      const l = lines[k], p = byId(l.id);
+      total += sale(p) * l.qty; list += p.price * l.qty; count += l.qty;
+    }
+    return { total, list, count, saved: list - total };
   }
 
-  /* ---------- RENDER: KATEGORİ SEKMELERİ ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.style.opacity = 1;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.style.opacity = 0; }, 1500);
+  }
+
+  /* ---------- KATEGORİ SEKMELERİ ---------- */
   function renderTabs() {
     const all = [{ id: 'all', name: 'Tümü', icon: 'fa-fire' }].concat(CATEGORIES);
     $('#tabs').innerHTML = all.map((c) => {
@@ -245,9 +342,9 @@
     }).join('');
   }
 
-  /* ---------- RENDER: ÜRÜN KARTI ---------- */
+  /* ---------- ÜRÜN KARTI ---------- */
   function controlsHTML(p) {
-    const q = cart[p.id] || 0;
+    const q = qtyOf(p.id);
     if (!q) {
       return `<button data-act="inc" data-id="${p.id}" class="bg-brand-600 hover:bg-brand-700 active:scale-95 transition text-white text-sm font-bold rounded-full px-4 py-2"><i class="fa-solid fa-plus mr-1"></i>Ekle</button>`;
     }
@@ -259,16 +356,22 @@
   }
 
   function cardHTML(p) {
-    const media = p.img
-      ? `<img src="${p.img}" alt="${p.name}" loading="lazy" class="w-full h-full object-cover">`
-      : `<div class="w-full h-full bg-gradient-to-br from-amber-300 via-amber-400 to-brand-500 flex items-center justify-center"><i class="fa-solid ${catIcon(p.cat)} text-3xl text-white/90"></i></div>`;
-    return `<article class="bg-white rounded-2xl border border-stone-200 shadow-sm p-3 flex gap-3" data-card="${p.id}">
-      <div class="w-24 h-24 rounded-xl overflow-hidden shrink-0">${media}</div>
+    const fallback = `<div class="absolute inset-0 bg-gradient-to-br from-amber-300 via-amber-400 to-brand-500 flex items-center justify-center"><i class="fa-solid ${catIcon(p.cat)} text-3xl text-white/90"></i></div>`;
+    const img = p.img ? `<img src="${IMG_BASE + p.img}" alt="${p.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover">` : '';
+    const badge = `<span class="absolute top-1 left-1 bg-amber-400 text-brand-800 text-[10px] font-extrabold rounded-md px-1.5 py-0.5">%${pct}</span>`;
+    const custom = p.opt.length
+      ? `<button data-act="inc" data-id="${p.id}" class="text-[11px] font-semibold text-brand-600 mt-1 text-left self-start"><i class="fa-solid fa-sliders mr-1"></i>Malzeme çıkarabilirsiniz</button>` : '';
+    return `<article class="bg-white rounded-2xl border border-stone-200 shadow-sm p-3 flex gap-3">
+      <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0">${fallback}${img}${badge}</div>
       <div class="flex-1 min-w-0 flex flex-col">
         <h3 class="font-bold leading-snug">${p.name}</h3>
-        <p class="text-xs text-stone-500 mt-0.5 line-clamp-2">${p.desc}</p>
-        <div class="mt-auto pt-2 flex items-center justify-between gap-2">
-          <span class="font-extrabold text-brand-600">${fmt(p.price)}</span>
+        ${p.desc ? `<p class="text-xs text-stone-500 mt-0.5 line-clamp-3">${p.desc}</p>` : ''}
+        ${custom}
+        <div class="mt-auto pt-2 flex items-center justify-between gap-2 flex-wrap">
+          <div class="leading-tight">
+            <span class="font-extrabold text-brand-600 text-lg">${fmt(sale(p))}</span>
+            <s class="block text-xs text-stone-400">${fmt(p.price)}</s>
+          </div>
           <div data-ctrl="${p.id}">${controlsHTML(p)}</div>
         </div>
       </div>
@@ -279,90 +382,120 @@
     const cats = activeCat === 'all' ? CATEGORIES : CATEGORIES.filter((c) => c.id === activeCat);
     $('#menu').innerHTML = cats.map((c) => {
       const items = PRODUCTS.filter((p) => p.cat === c.id);
-      return `<section id="sec-${c.id}">
+      return `<section>
         <h2 class="flex items-center gap-2 font-extrabold text-xl mb-3"><span class="w-8 h-8 rounded-lg bg-brand-600 text-amber-300 flex items-center justify-center text-sm"><i class="fa-solid ${c.icon}"></i></span>${c.name}</h2>
         <div class="space-y-3">${items.map(cardHTML).join('')}</div>
       </section>`;
     }).join('');
   }
 
-  /* Sadece ilgili kartın butonlarını güncelle (kaydırma pozisyonu bozulmasın) */
   function refreshCard(id) {
     const holder = document.querySelector(`[data-ctrl="${id}"]`);
     if (holder) { holder.innerHTML = controlsHTML(byId(id)); const n = holder.querySelector('span'); if (n) n.classList.add('pop'); }
   }
 
-  /* ---------- SEPET ÇUBUĞU ---------- */
+  /* ---------- SEPET ---------- */
+  function addLine(id, removed, qty) {
+    const k = lineKey(id, removed);
+    if (lines[k]) lines[k].qty += qty; else lines[k] = { id, removed, qty };
+    after(id);
+  }
+  function changeLine(k, d) {
+    const l = lines[k]; if (!l) return;
+    const id = l.id; l.qty += d;
+    if (l.qty <= 0) delete lines[k];
+    after(id);
+  }
+  function after(id) {
+    refreshCard(id); updateBar();
+    if (isOpen('#sheet')) renderSummary();
+  }
+
   function updateBar() {
-    const { total, count } = totals();
-    const bar = $('#cartBar');
-    bar.classList.toggle('hidden', count === 0);
+    const { total, count, saved } = totals();
+    $('#cartBar').classList.toggle('hidden', count === 0);
     $('#cartCount').textContent = count;
     $('#cartTotal').textContent = fmt(total);
+    $('#cartSaved').textContent = saved > 0 ? `(${fmt(saved)} kazanç)` : '';
     const warn = $('#minWarn'), btn = $('#checkoutBtn');
     const short = MIN_ORDER - total;
     if (count > 0 && short > 0) {
       warn.textContent = `Min. sipariş tutarı ${MIN_ORDER} TL'dir (${fmt(short)} daha ekleyin)`;
-      warn.classList.remove('hidden');
-      btn.disabled = true;
-    } else {
-      warn.classList.add('hidden');
-      btn.disabled = false;
-    }
-    document.body.style.paddingBottom = count ? '' : '24px';
+      warn.classList.remove('hidden'); btn.disabled = true;
+    } else { warn.classList.add('hidden'); btn.disabled = false; }
+    document.body.style.paddingBottom = count ? '130px' : '24px';
   }
 
-  function change(id, delta) {
-    const q = (cart[id] || 0) + delta;
-    if (q <= 0) delete cart[id]; else cart[id] = q;
-    refreshCard(id);
-    updateBar();
-    if (isSheetOpen()) renderSummary();
+  /* ---------- SHEET YARDIMCILARI ---------- */
+  const isOpen = (sel) => $(sel).classList.contains('open');
+  function setSheet(sheetSel, backSel, open) {
+    $(sheetSel).classList.toggle('open', open);
+    $(backSel).classList.toggle('open', open);
+    document.body.style.overflow = (isOpen('#sheet') || isOpen('#optSheet')) ? 'hidden' : '';
   }
 
-  /* ---------- CHECKOUT ---------- */
-  const sheet = $('#sheet'), backdrop = $('#backdrop');
-  const isSheetOpen = () => sheet.classList.contains('open');
+  /* ---------- MALZEME SEÇİM PENCERESİ ---------- */
+  function openOpt(id) {
+    opt = { id, removed: new Set(), qty: 1 };
+    renderOpt();
+    setSheet('#optSheet', '#optBackdrop', true);
+  }
+  function renderOpt() {
+    const p = byId(opt.id);
+    $('#optTitle').textContent = p.name;
+    $('#optDesc').textContent = p.desc;
+    $('#optFixedWrap').classList.toggle('hidden', !p.fixed.length);
+    $('#optFixed').textContent = p.fixed.join(', ');
+    $('#optList').innerHTML = p.opt.map((n, i) => {
+      const out = opt.removed.has(n);
+      return `<label class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+        <input type="checkbox" data-opt="${i}" ${out ? '' : 'checked'} class="accent-brand-600 w-5 h-5 shrink-0">
+        <span class="flex-1 text-sm font-semibold ${out ? 'line-through text-stone-400' : ''}">${n}</span>
+        <span class="text-xs font-semibold ${out ? 'text-brand-600' : 'text-stone-400'}">${out ? 'Çıkarılacak' : 'Olsun'}</span>
+      </label>`;
+    }).join('');
+    $('#optQty').textContent = opt.qty;
+    $('#optAdd').textContent = `Sepete Ekle · ${fmt(sale(p) * opt.qty)}`;
+  }
 
+  /* ---------- CHECKOUT ÖZETİ ---------- */
   function renderSummary() {
-    const ids = Object.keys(cart);
-    if (!ids.length) { closeSheet(); return; }
-    $('#summary').innerHTML = ids.map((id) => {
-      const p = byId(id), q = cart[id];
+    const keys = Object.keys(lines);
+    if (!keys.length) { setSheet('#sheet', '#backdrop', false); return; }
+    $('#summary').innerHTML = keys.map((k) => {
+      const l = lines[k], p = byId(l.id), q = l.qty;
+      const note = l.removed.length ? `<p class="text-xs text-brand-600 font-semibold mt-0.5">Çıkarılan: ${l.removed.join(', ')}</p>` : '';
       return `<div class="flex items-center gap-3 p-3">
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-sm truncate">${p.name}</p>
-          <p class="text-xs text-stone-500">${fmt(p.price)} × ${q}</p>
+          <p class="font-semibold text-sm leading-snug">${p.name}</p>
+          ${note}
+          <p class="text-xs text-stone-500 mt-0.5">${fmt(sale(p))} × ${q}</p>
         </div>
-        <div class="flex items-center bg-brand-50 border border-brand-100 rounded-full">
-          <button data-sum="dec" data-id="${id}" class="w-8 h-8 rounded-full text-brand-600" aria-label="Azalt"><i class="fa-solid ${q === 1 ? 'fa-trash-can text-xs' : 'fa-minus text-xs'}"></i></button>
+        <div class="flex items-center bg-brand-50 border border-brand-100 rounded-full shrink-0">
+          <button data-sum="dec" data-key="${k}" class="w-8 h-8 rounded-full text-brand-600" aria-label="Azalt"><i class="fa-solid ${q === 1 ? 'fa-trash-can text-xs' : 'fa-minus text-xs'}"></i></button>
           <span class="w-6 text-center font-bold text-sm">${q}</span>
-          <button data-sum="inc" data-id="${id}" class="w-8 h-8 rounded-full bg-brand-600 text-white" aria-label="Artır"><i class="fa-solid fa-plus text-xs"></i></button>
+          <button data-sum="inc" data-key="${k}" class="w-8 h-8 rounded-full bg-brand-600 text-white" aria-label="Artır"><i class="fa-solid fa-plus text-xs"></i></button>
         </div>
-        <span class="w-16 text-right font-bold text-sm">${fmt(p.price * q)}</span>
+        <span class="w-16 text-right font-bold text-sm shrink-0">${fmt(sale(p) * q)}</span>
       </div>`;
     }).join('');
-    const { total } = totals();
+    const { total, list, saved } = totals();
+    $('#sumList').textContent = fmt(list);
+    $('#sumDiscLabel').textContent = `%${pct} indirim`;
+    $('#sumDisc').textContent = '-' + fmt(saved);
     $('#sumTotal').textContent = fmt(total);
     const ok = total >= MIN_ORDER;
     $('#sendWa').disabled = !ok;
     $('#sendWa').classList.toggle('opacity-50', !ok);
     const err = $('#formError');
-    if (!ok) { err.textContent = `Min. sipariş tutarı ${MIN_ORDER} TL'dir (${fmt(MIN_ORDER - total)} daha ekleyin)`; err.classList.remove('hidden'); }
-    else if (err.dataset.kind === 'min') err.classList.add('hidden');
-    err.dataset.kind = ok ? '' : 'min';
+    if (!ok) { err.textContent = `Min. sipariş tutarı ${MIN_ORDER} TL'dir (${fmt(MIN_ORDER - total)} daha ekleyin)`; err.classList.remove('hidden'); err.dataset.kind = 'min'; }
+    else if (err.dataset.kind === 'min') { err.classList.add('hidden'); err.dataset.kind = ''; }
   }
 
-  function openSheet() {
+  function openCheckout() {
     if (totals().total < MIN_ORDER) return;
-    loadCustomer();
-    renderSummary();
-    sheet.classList.add('open'); backdrop.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSheet() {
-    sheet.classList.remove('open'); backdrop.classList.remove('open');
-    document.body.style.overflow = '';
+    loadCustomer(); renderSummary();
+    setSheet('#sheet', '#backdrop', true);
   }
 
   /* ---------- ADRES HAFIZASI (LocalStorage) ---------- */
@@ -387,7 +520,7 @@
   function showError(msg) { const e = $('#formError'); e.textContent = msg; e.dataset.kind = 'form'; e.classList.remove('hidden'); }
 
   function sendOrder() {
-    const { total } = totals();
+    const { total, list, saved } = totals();
     if (total < MIN_ORDER) return;
     const name = $('#fName').value.trim();
     const phone = $('#fPhone').value.trim();
@@ -402,18 +535,22 @@
 
     saveCustomer({ name, phone, address });
 
-    const lines = Object.keys(cart).map((id) => {
-      const p = byId(id), q = cart[id];
-      return `• ${q} x ${p.name} - ${fmt(p.price * q)}`;
+    const orderLines = [];
+    Object.keys(lines).forEach((k) => {
+      const l = lines[k], p = byId(l.id);
+      orderLines.push(`• ${l.qty} x ${p.name} - ${fmt(sale(p) * l.qty)}`);
+      if (l.removed.length) orderLines.push(`   ⚠ ÇIKARILACAK: ${l.removed.join(', ')}`);
     });
 
     const msg = [
       `*YENİ SİPARİŞ - ${STORE_NAME}*`,
       '',
       '*Sipariş:*',
-      ...lines,
+      ...orderLines,
       '',
-      `*Toplam:* ${fmt(total)}`,
+      `Liste fiyatı: ${fmt(list)}`,
+      `%${pct} indirim: -${fmt(saved)}`,
+      `*TOPLAM: ${fmt(total)}*`,
       `*Ödeme:* ${pay}`,
       '',
       '*Müşteri Bilgileri*',
@@ -437,25 +574,54 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       t.scrollIntoView({ inline: 'center', block: 'nearest' });
     } else if (t.dataset.act) {
-      change(t.dataset.id, t.dataset.act === 'inc' ? 1 : -1);
+      const id = t.dataset.id, p = byId(id);
+      if (t.dataset.act === 'inc') {
+        if (p.opt.length) openOpt(id); else addLine(id, [], 1);
+      } else {
+        const ks = Object.keys(lines).filter((k) => lines[k].id === id);
+        if (ks.length) changeLine(ks[ks.length - 1], -1);
+      }
     } else if (t.dataset.sum) {
-      change(t.dataset.id, t.dataset.sum === 'inc' ? 1 : -1);
+      changeLine(t.dataset.key, t.dataset.sum === 'inc' ? 1 : -1);
     }
   });
 
-  $('#checkoutBtn').addEventListener('click', openSheet);
-  $('#openCartBtn').addEventListener('click', openSheet);
-  $('#closeSheet').addEventListener('click', closeSheet);
-  backdrop.addEventListener('click', closeSheet);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+  $('#optList').addEventListener('change', (e) => {
+    const cb = e.target.closest('[data-opt]'); if (!cb) return;
+    const name = byId(opt.id).opt[+cb.dataset.opt];
+    if (cb.checked) opt.removed.delete(name); else opt.removed.add(name);
+    renderOpt();
+  });
+  $('#optMinus').addEventListener('click', () => { if (opt.qty > 1) { opt.qty--; renderOpt(); } });
+  $('#optPlus').addEventListener('click', () => { if (opt.qty < 20) { opt.qty++; renderOpt(); } });
+  $('#optAdd').addEventListener('click', () => {
+    const p = byId(opt.id);
+    const removed = p.opt.filter((n) => opt.removed.has(n));   // menü sırasına göre
+    addLine(opt.id, removed, opt.qty);
+    setSheet('#optSheet', '#optBackdrop', false);
+    toast('Sepete eklendi');
+  });
+  $('#optClose').addEventListener('click', () => setSheet('#optSheet', '#optBackdrop', false));
+  $('#optBackdrop').addEventListener('click', () => setSheet('#optSheet', '#optBackdrop', false));
+
+  $('#checkoutBtn').addEventListener('click', openCheckout);
+  $('#openCartBtn').addEventListener('click', openCheckout);
+  $('#closeSheet').addEventListener('click', () => setSheet('#sheet', '#backdrop', false));
+  $('#backdrop').addEventListener('click', () => setSheet('#sheet', '#backdrop', false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { setSheet('#optSheet', '#optBackdrop', false); setSheet('#sheet', '#backdrop', false); }
+  });
   $('#sendWa').addEventListener('click', sendOrder);
 
-  // Üst köşedeki WhatsApp destek butonu
   $('#waTop').href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Merhaba, sipariş hakkında bilgi almak istiyorum.')}`;
+  $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde %${pct} indirim · Min. sipariş ${MIN_ORDER} TL`;
+
+  function fixNav() { $('#catNav').style.top = $('#topHeader').offsetHeight + 'px'; }
+  window.addEventListener('resize', fixNav);
 
   /* ---------- BAŞLAT ---------- */
-  renderTabs(); renderMenu(); updateBar();
-  document.body.style.paddingBottom = '24px';
+  renderTabs(); renderMenu(); updateBar(); fixNav();
+  window.addEventListener('load', fixNav);
 })();
 </script>
 </body>
