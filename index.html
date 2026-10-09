@@ -56,7 +56,7 @@
 <!-- MAĞAZA SEÇİMİ (AÇILIŞ SAYFASI) -->
 <section id="landing" class="max-w-2xl mx-auto px-4 pt-6 pb-8">
   <h2 class="font-extrabold text-2xl leading-tight">Nereden sipariş vermek istersiniz?</h2>
-  <p class="text-sm text-stone-500 mt-1 mb-5">Komisyon ödemeden, yemek uygulamalarından daha uygun fiyatla sipariş verin.</p>
+  <p class="text-sm text-stone-500 mt-1 mb-5">Komisyon ödemeden, yemek uygulamalarından daha uygun fiyatla sipariş verin. İki mağazadan tek sepette birlikte sipariş verebilirsiniz.</p>
   <div id="shopCards" class="space-y-4"></div>
   <p class="text-center text-xs text-stone-500 mt-8">Siparişiniz WhatsApp üzerinden onaylanır.</p>
 </section>
@@ -142,7 +142,7 @@
 
     <div class="overflow-y-auto px-5 py-4 space-y-5">
       <div>
-        <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-receipt text-brand-600 mr-1.5"></i>Sepet özeti · <span id="sumShop"></span></h3>
+        <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-receipt text-brand-600 mr-1.5"></i>Sepet özeti</h3>
         <div id="summary" class="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100"></div>
         <div class="mt-3 px-1 space-y-1 text-sm">
           <div class="flex justify-between text-stone-500"><span>Liste fiyatı</span><span id="sumList" class="line-through"></span></div>
@@ -217,16 +217,17 @@
   /* =====================================================
      GENEL AYARLAR
      ===================================================== */
-  const DISCOUNT = 0.30;                     // Tüm ürünlere indirim oranı (%30)
+  const MIN_ORDER = 250;                     // Ortak sepet için minimum tutar (indirimli toplam)
   const LS_CUSTOMER = 'dff_customer_v1';     // Müşteri bilgileri (ortak, iki mağaza için)
   const SITE_TITLE = 'Edirne Online Sipariş';
   const SITE_TAG = 'Komisyonsuz · Daha uygun fiyat';
   const DEFAULT_WA = '905313724001';
 
-  /* İndirimli fiyat: %30 düşülüp 5 TL'ye yuvarlanır (düz fiyat) */
-  const sale = (p) => Math.round(p.price * (1 - DISCOUNT) / 5) * 5;
+  /* İndirimli fiyat: mağazanın indirim oranı düşülüp 5 TL'ye yuvarlanır (düz fiyat).
+     İndirim oranları mağaza tanımlarındaki "discount" alanından değiştirilir. */
+  const sale = (p) => Math.round(p.price * (1 - SHOPS[p.shop].discount) / 5) * 5;
   const pctOf = (p) => Math.round((1 - sale(p) / p.price) * 100);
-  const pct = Math.round(DISCOUNT * 100);
+  const shopPct = (sh) => Math.round(sh.discount * 100);
 
   /* Ürün tanımlama kısayolu
      P(id, kategori, ad, liste fiyatı, görsel dosyası, açıklama, sabit malzemeler, çıkarılabilir malzemeler, seçimli menü) */
@@ -243,7 +244,7 @@
     icon: 'fa-user-doctor',
     cover: 'https://cdn.tgoapps.com/orangeprod150/ce77b2bc-0384-446a-a64d-fe99d1517c47.jpeg',
     wa: DEFAULT_WA,
-    minOrder: 250,
+    discount: 0.30,   // %30 indirim
     imgBase: 'https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/484029/',
     categories: [
       { id: 'sandvic',   name: 'Sandviçler',      icon: 'fa-burger' },
@@ -347,7 +348,7 @@
     icon: 'fa-pizza-slice',
     cover: 'https://cdn.tgoapps.com/orangeprod150/c2137a42-12e0-4d75-8690-fdc043fbdaaf.jpeg',
     wa: DEFAULT_WA,
-    minOrder: 250,
+    discount: 0.40,   // %40 indirim
     imgBase: 'https://cdn.tgoapps.com/mnresize/256/-/tgo2/spm/prod/meal/media/images/product/449683/',
     categories: [
       { id: 'menu',      name: 'Menüler',            icon: 'fa-box-open' },
@@ -399,30 +400,34 @@
   SHOPS[DFF.id] = DFF;
   SHOPS[SP.id] = SP;
   const SHOP_ORDER = [DFF.id, SP.id];
+  SHOP_ORDER.forEach((id) => SHOPS[id].products.forEach((p) => { p.shop = id; }));
+  const ALL_PRODUCTS = SHOP_ORDER.reduce((a, id) => a.concat(SHOPS[id].products), []);
 
   /* =====================================================
      DURUM
      ===================================================== */
-  const carts = {};            // her mağazanın kendi sepeti
   let shop = null;             // seçili mağaza (null = açılış sayfası)
   let PRODUCTS = [], CATEGORIES = [];
-  let lines = {};              // { anahtar: { id, removed:[], picks:[], qty } }
+  let lines = {};              // ORTAK SEPET (iki mağaza): { anahtar: { id, removed:[], picks:[], qty } }
+  let pendingMsgs = [];        // farklı WhatsApp hatları varsa sıradaki mesajlar
   let activeCat = 'all';
   let opt = { id: null, removed: new Set(), qty: 1, picks: [] };
 
   const $ = (s) => document.querySelector(s);
   const fmt = (n) => n.toLocaleString('tr-TR') + ' TL';
-  const byId = (id) => PRODUCTS.find((p) => p.id === id);
+  const byId = (id) => ALL_PRODUCTS.find((p) => p.id === id);
+  const linesOf = (shopId) => Object.keys(lines).filter((k) => byId(lines[k].id).shop === shopId);
   const catIcon = (id) => (CATEGORIES.find((c) => c.id === id) || {}).icon || 'fa-utensils';
   const needsModal = (p) => p.opt.length > 0 || !!p.picks;
   const lineKey = (id, removed, picks) => id + '|' + removed.join(',') + '|' + picks.slice().sort().join(',');
   const qtyOf = (id) => Object.values(lines).filter((l) => l.id === id).reduce((a, l) => a + l.qty, 0);
   const isOpen = (sel) => $(sel).classList.contains('open');
 
-  function totals() {
+  function totals(only) {
     let total = 0, list = 0, count = 0;
     for (const k in lines) {
       const l = lines[k], p = byId(l.id);
+      if (only && only.indexOf(p.shop) < 0) continue;
       total += sale(p) * l.qty; list += p.price * l.qty; count += l.qty;
     }
     return { total, list, count, saved: list - total };
@@ -451,7 +456,7 @@
         <div class="relative h-44 bg-gradient-to-br from-amber-300 via-amber-400 to-brand-500 flex items-center justify-center">
           <i class="fa-solid ${s.icon} text-7xl text-white/90"></i>
           <img src="${s.cover}" alt="${s.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover">
-          <span class="absolute top-3 left-3 bg-amber-400 text-brand-800 text-xs font-extrabold rounded-full px-3 py-1">Yaklaşık %${pct} indirim</span>
+          <span class="absolute top-3 left-3 bg-amber-400 text-brand-800 text-xs font-extrabold rounded-full px-3 py-1">Yaklaşık %${shopPct(s)} indirim</span>
         </div>
         <div class="p-4 flex items-center gap-3">
           <div class="flex-1 min-w-0">
@@ -490,7 +495,7 @@
 
   function cardHTML(p) {
     const fallback = `<div class="absolute inset-0 bg-gradient-to-br from-amber-300 via-amber-400 to-brand-500 flex items-center justify-center"><i class="fa-solid ${catIcon(p.cat)} text-3xl text-white/90"></i></div>`;
-    const img = p.img ? `<img src="${shop.imgBase + p.img}" alt="${p.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover">` : '';
+    const img = p.img ? `<img src="${SHOPS[p.shop].imgBase + p.img}" alt="${p.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" class="absolute inset-0 w-full h-full object-cover">` : '';
     const badge = `<span class="absolute top-1 left-1 bg-amber-400 text-brand-800 text-[10px] font-extrabold rounded-md px-1.5 py-0.5">%${pctOf(p)}</span>`;
     let hint = '';
     if (p.picks) hint = `<button data-act="inc" data-id="${p.id}" class="text-[11px] font-semibold text-brand-600 mt-1 text-left self-start"><i class="fa-solid fa-hand-pointer mr-1"></i>Pizzalarınızı seçin</button>`;
@@ -548,16 +553,15 @@
   }
 
   function updateBar() {
-    if (!shop) { $('#cartBar').classList.add('hidden'); document.body.style.paddingBottom = '24px'; return; }
     const { total, count, saved } = totals();
     $('#cartBar').classList.toggle('hidden', count === 0);
     $('#cartCount').textContent = count;
     $('#cartTotal').textContent = fmt(total);
     $('#cartSaved').textContent = saved > 0 ? `(${fmt(saved)} kazanç)` : '';
     const warn = $('#minWarn'), btn = $('#checkoutBtn');
-    const short = shop.minOrder - total;
+    const short = MIN_ORDER - total;
     if (count > 0 && short > 0) {
-      warn.textContent = `Min. sipariş tutarı ${shop.minOrder} TL'dir (${fmt(short)} daha ekleyin)`;
+      warn.textContent = `Min. sipariş tutarı ${MIN_ORDER} TL'dir (${fmt(short)} daha ekleyin)`;
       warn.classList.remove('hidden'); btn.disabled = true;
     } else { warn.classList.add('hidden'); btn.disabled = false; }
     document.body.style.paddingBottom = count ? '130px' : '24px';
@@ -581,7 +585,7 @@
     // Seçimli menü (ör. 2 pizza seç)
     $('#optPicksWrap').classList.toggle('hidden', !p.picks);
     if (p.picks) {
-      const choices = PRODUCTS.filter((x) => x.cat === p.picks.cat).map((x) => x.name);
+      const choices = SHOPS[p.shop].products.filter((x) => x.cat === p.picks.cat).map((x) => x.name);
       $('#optPicksTitle').textContent = p.picks.title;
       $('#optPicks').innerHTML = opt.picks.map((v, i) =>
         `<select data-pick="${i}" aria-label="${i + 1}. seçim" class="w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm focus:border-brand-500">
@@ -610,42 +614,48 @@
   /* =====================================================
      CHECKOUT ÖZETİ
      ===================================================== */
+  function rowHTML(k) {
+    const l = lines[k], p = byId(l.id), q = l.qty;
+    const picks = l.picks.length ? `<p class="text-xs text-stone-600 mt-0.5">Seçim: ${l.picks.join(' + ')}</p>` : '';
+    const removed = l.removed.length ? `<p class="text-xs text-brand-600 font-semibold mt-0.5">Çıkarılan: ${l.removed.join(', ')}</p>` : '';
+    return `<div class="flex items-center gap-3 p-3">
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm leading-snug">${p.name}</p>
+        ${picks}${removed}
+        <p class="text-xs text-stone-500 mt-0.5">${fmt(sale(p))} × ${q}</p>
+      </div>
+      <div class="flex items-center bg-brand-50 border border-brand-100 rounded-full shrink-0">
+        <button data-sum="dec" data-key="${k}" class="w-8 h-8 rounded-full text-brand-600" aria-label="Azalt"><i class="fa-solid ${q === 1 ? 'fa-trash-can text-xs' : 'fa-minus text-xs'}"></i></button>
+        <span class="w-6 text-center font-bold text-sm">${q}</span>
+        <button data-sum="inc" data-key="${k}" class="w-8 h-8 rounded-full bg-brand-600 text-white" aria-label="Artır"><i class="fa-solid fa-plus text-xs"></i></button>
+      </div>
+      <span class="w-16 text-right font-bold text-sm shrink-0">${fmt(sale(p) * q)}</span>
+    </div>`;
+  }
+
   function renderSummary() {
-    const keys = Object.keys(lines);
-    if (!keys.length) { setSheet('#sheet', '#backdrop', false); return; }
-    $('#sumShop').textContent = shop.name;
-    $('#summary').innerHTML = keys.map((k) => {
-      const l = lines[k], p = byId(l.id), q = l.qty;
-      const picks = l.picks.length ? `<p class="text-xs text-stone-600 mt-0.5">Seçim: ${l.picks.join(' + ')}</p>` : '';
-      const removed = l.removed.length ? `<p class="text-xs text-brand-600 font-semibold mt-0.5">Çıkarılan: ${l.removed.join(', ')}</p>` : '';
-      return `<div class="flex items-center gap-3 p-3">
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-sm leading-snug">${p.name}</p>
-          ${picks}${removed}
-          <p class="text-xs text-stone-500 mt-0.5">${fmt(sale(p))} × ${q}</p>
-        </div>
-        <div class="flex items-center bg-brand-50 border border-brand-100 rounded-full shrink-0">
-          <button data-sum="dec" data-key="${k}" class="w-8 h-8 rounded-full text-brand-600" aria-label="Azalt"><i class="fa-solid ${q === 1 ? 'fa-trash-can text-xs' : 'fa-minus text-xs'}"></i></button>
-          <span class="w-6 text-center font-bold text-sm">${q}</span>
-          <button data-sum="inc" data-key="${k}" class="w-8 h-8 rounded-full bg-brand-600 text-white" aria-label="Artır"><i class="fa-solid fa-plus text-xs"></i></button>
-        </div>
-        <span class="w-16 text-right font-bold text-sm shrink-0">${fmt(sale(p) * q)}</span>
-      </div>`;
+    if (!Object.keys(lines).length) { setSheet('#sheet', '#backdrop', false); return; }
+    $('#summary').innerHTML = SHOP_ORDER.map((id) => {
+      const ks = linesOf(id); if (!ks.length) return '';
+      const sh = SHOPS[id];
+      return `<div class="px-3 py-2 bg-brand-50 text-xs font-extrabold text-brand-700 flex items-center gap-2"><i class="fa-solid ${sh.icon}"></i>${sh.name}<span class="ml-auto font-semibold text-green-600">%${shopPct(sh)} indirim</span></div>`
+        + ks.map(rowHTML).join('');
     }).join('');
     const { total, list, saved } = totals();
     $('#sumList').textContent = fmt(list);
     $('#sumDisc').textContent = '-' + fmt(saved);
     $('#sumTotal').textContent = fmt(total);
-    const ok = total >= shop.minOrder;
+    const ok = total >= MIN_ORDER;
     $('#sendWa').disabled = !ok;
     $('#sendWa').classList.toggle('opacity-50', !ok);
     const err = $('#formError');
-    if (!ok) { err.textContent = `Min. sipariş tutarı ${shop.minOrder} TL'dir (${fmt(shop.minOrder - total)} daha ekleyin)`; err.classList.remove('hidden'); err.dataset.kind = 'min'; }
+    if (!ok) { err.textContent = `Min. sipariş tutarı ${MIN_ORDER} TL'dir (${fmt(MIN_ORDER - total)} daha ekleyin)`; err.classList.remove('hidden'); err.dataset.kind = 'min'; }
     else if (err.dataset.kind === 'min') { err.classList.add('hidden'); err.dataset.kind = ''; }
   }
 
   function openCheckout() {
-    if (!shop || totals().total < shop.minOrder) return;
+    if (totals().total < MIN_ORDER) return;
+    pendingMsgs = []; updateSendBtn();
     loadCustomer(); renderSummary();
     setSheet('#sheet', '#backdrop', true);
   }
@@ -675,51 +685,63 @@
      ===================================================== */
   function showError(msg) { const e = $('#formError'); e.textContent = msg; e.dataset.kind = 'form'; e.classList.remove('hidden'); }
 
-  function sendOrder() {
-    const { total, list, saved } = totals();
-    if (!shop || total < shop.minOrder) return;
-    const name = $('#fName').value.trim();
-    const phone = $('#fPhone').value.trim();
-    const address = $('#fAddress').value.trim();
-    const note = $('#fNote').value.trim();
-    const pay = (document.querySelector('input[name="pay"]:checked') || {}).value || 'Kapıda Nakit';
+  const SEND_LABEL = '<i class="fa-brands fa-whatsapp text-xl"></i>Siparişi WhatsApp ile Gönder';
+  function updateSendBtn() {
+    $('#sendWa').innerHTML = pendingMsgs.length
+      ? `<i class="fa-brands fa-whatsapp text-xl"></i>Sıradaki siparişi gönder: ${pendingMsgs[0].shops.map((i) => SHOPS[i].name).join(' + ')}`
+      : SEND_LABEL;
+  }
 
-    if (name.length < 2) { showError('Lütfen adınızı yazın.'); $('#fName').focus(); return; }
-    if (phone.replace(/\D/g, '').length < 10) { showError('Lütfen geçerli bir telefon numarası yazın.'); $('#fPhone').focus(); return; }
-    if (address.length < 10) { showError('Lütfen açık adresinizi yazın (mahalle, sokak, bina ve daire no).'); $('#fAddress').focus(); return; }
-    $('#formError').classList.add('hidden');
-
-    saveCustomer({ name, phone, address });
-
-    const orderLines = [];
-    Object.keys(lines).forEach((k) => {
-      const l = lines[k], p = byId(l.id);
-      orderLines.push(`• ${l.qty} x ${p.name} - ${fmt(sale(p) * l.qty)}`);
-      if (l.picks.length) orderLines.push(`   Seçimler: ${l.picks.join(' + ')}`);
-      if (l.removed.length) orderLines.push(`   ⚠ ÇIKARILACAK: ${l.removed.join(', ')}`);
+  function buildMessage(shopIds, c) {
+    const t = totals(shopIds);
+    const multi = shopIds.length > 1;
+    const out = [`*YENİ SİPARİŞ - ${shopIds.map((i) => SHOPS[i].name.toUpperCase()).join(' + ')}*`, ''];
+    shopIds.forEach((id) => {
+      out.push(multi ? `*${SHOPS[id].name}:*` : '*Sipariş:*');
+      linesOf(id).forEach((k) => {
+        const l = lines[k], p = byId(l.id);
+        out.push(`• ${l.qty} x ${p.name} - ${fmt(sale(p) * l.qty)}`);
+        if (l.picks.length) out.push(`   Seçimler: ${l.picks.join(' + ')}`);
+        if (l.removed.length) out.push(`   ⚠ ÇIKARILACAK: ${l.removed.join(', ')}`);
+      });
+      if (multi) out.push(`   Ara toplam: ${fmt(totals([id]).total)}`);
+      out.push('');
     });
+    out.push(`Liste fiyatı: ${fmt(t.list)}`, `İndirim: -${fmt(t.saved)}`, `*TOPLAM: ${fmt(t.total)}*`, `*Ödeme:* ${c.pay}`, '',
+      '*Müşteri Bilgileri*', `Ad Soyad: ${c.name}`, `Telefon: ${c.phone}`, `Adres: ${c.address}`);
+    if (c.note) out.push(`Not: ${c.note}`);
+    out.push('', 'Sipariş web sitesinden gönderildi.');
+    return out.join('\n');
+  }
 
-    const msg = [
-      `*YENİ SİPARİŞ - ${shop.name.toUpperCase()}*`,
-      '',
-      '*Sipariş:*',
-      ...orderLines,
-      '',
-      `Liste fiyatı: ${fmt(list)}`,
-      `İndirim: -${fmt(saved)}`,
-      `*TOPLAM: ${fmt(total)}*`,
-      `*Ödeme:* ${pay}`,
-      '',
-      '*Müşteri Bilgileri*',
-      `Ad Soyad: ${name}`,
-      `Telefon: ${phone}`,
-      `Adres: ${address}`,
-      note ? `Not: ${note}` : null,
-      '',
-      'Sipariş web sitesinden gönderildi.'
-    ].filter((l) => l !== null).join('\n');
+  function openWa(m) { window.open(`https://wa.me/${m.wa}?text=${encodeURIComponent(m.text)}`, '_blank'); }
 
-    window.open(`https://wa.me/${shop.wa}?text=${encodeURIComponent(msg)}`, '_blank');
+  function sendOrder() {
+    // Farklı hatlara gidecek siparişler varsa sıradaki mesajı aç
+    if (pendingMsgs.length) { openWa(pendingMsgs.shift()); updateSendBtn(); return; }
+
+    if (totals().total < MIN_ORDER) return;
+    const c = {
+      name: $('#fName').value.trim(),
+      phone: $('#fPhone').value.trim(),
+      address: $('#fAddress').value.trim(),
+      note: $('#fNote').value.trim(),
+      pay: (document.querySelector('input[name="pay"]:checked') || {}).value || 'Kapıda Nakit'
+    };
+    if (c.name.length < 2) { showError('Lütfen adınızı yazın.'); $('#fName').focus(); return; }
+    if (c.phone.replace(/\D/g, '').length < 10) { showError('Lütfen geçerli bir telefon numarası yazın.'); $('#fPhone').focus(); return; }
+    if (c.address.length < 10) { showError('Lütfen açık adresinizi yazın (mahalle, sokak, bina ve daire no).'); $('#fAddress').focus(); return; }
+    $('#formError').classList.add('hidden');
+    saveCustomer({ name: c.name, phone: c.phone, address: c.address });
+
+    // Sepetteki mağazaları WhatsApp hattına göre grupla (şu an ikisi de aynı hat = tek mesaj)
+    const byWa = {};
+    SHOP_ORDER.forEach((id) => { if (linesOf(id).length) (byWa[SHOPS[id].wa] = byWa[SHOPS[id].wa] || []).push(id); });
+    const msgs = Object.keys(byWa).map((wa) => ({ wa, shops: byWa[wa], text: buildMessage(byWa[wa], c) }));
+    openWa(msgs[0]);
+    pendingMsgs = msgs.slice(1);
+    updateSendBtn();
+    if (pendingMsgs.length) showError('Siparişiniz iki ayrı hatta gidiyor. İlk mesaj açıldı, ikincisi için aşağıdaki butona basın.');
   }
 
   /* =====================================================
@@ -728,14 +750,14 @@
   function fixNav() { const n = $('#catNav'); if (n) n.style.top = $('#topHeader').offsetHeight + 'px'; }
 
   function showLanding() {
-    shop = null; PRODUCTS = []; CATEGORIES = []; lines = {};
+    shop = null; PRODUCTS = []; CATEGORIES = [];
     $('#landing').classList.remove('hidden');
     $('#shopView').classList.add('hidden');
     $('#backBtn').classList.add('hidden'); $('#backBtn').classList.remove('flex');
     $('#brandIcon').classList.remove('hidden');
     $('#brandName').textContent = SITE_TITLE;
     $('#brandTag').textContent = SITE_TAG;
-    $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde yaklaşık %${pct} indirim`;
+    $('#promoBanner').innerHTML = '<i class="fa-solid fa-tag mr-1"></i>' + SHOP_ORDER.map((id) => SHOPS[id].name + ' %' + shopPct(SHOPS[id])).join(' · ') + ' indirim';
     $('#waTop').href = `https://wa.me/${DEFAULT_WA}?text=${encodeURIComponent('Merhaba, sipariş hakkında bilgi almak istiyorum.')}`;
     document.title = SITE_TITLE + ' | Doktor Fast Food · Sentory Pizza';
     updateBar();
@@ -744,7 +766,6 @@
   function showShop(id) {
     shop = SHOPS[id];
     PRODUCTS = shop.products; CATEGORIES = shop.categories;
-    carts[id] = carts[id] || {}; lines = carts[id];
     activeCat = 'all';
     $('#landing').classList.add('hidden');
     $('#shopView').classList.remove('hidden');
@@ -752,7 +773,7 @@
     $('#brandIcon').classList.add('hidden');
     $('#brandName').textContent = shop.name;
     $('#brandTag').textContent = shop.tagline;
-    $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde yaklaşık %${pct} indirim · Min. sipariş ${shop.minOrder} TL`;
+    $('#promoBanner').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>Tüm ürünlerde yaklaşık %${shopPct(shop)} indirim · Min. sipariş ${MIN_ORDER} TL (ortak sepet)`;
     $('#footName').textContent = '© ' + shop.name + ' · Edirne';
     $('#waTop').href = `https://wa.me/${shop.wa}?text=${encodeURIComponent('Merhaba, ' + shop.name + ' hakkında bilgi almak istiyorum.')}`;
     document.title = shop.name + ' | Online Sipariş';
